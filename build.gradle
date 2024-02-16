@@ -1,6 +1,9 @@
 plugins {
 	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'maven-publish'
+	id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+	id "org.jetbrains.kotlin.plugin.serialization" version "1.8.0"
+	id 'com.github.johnrengelman.shadow' version "7.1.2"
 }
 
 version = project.mod_version
@@ -8,6 +11,11 @@ group = project.maven_group
 
 base {
 	archivesName = project.archives_base_name
+}
+
+configurations {
+	api.extendsFrom includeApi
+	shadowInclude
 }
 
 repositories {
@@ -31,27 +39,42 @@ loom {
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
-	// Uncomment the following line to enable the deprecated Fabric API modules. 
-	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
-
-	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
+	modImplementation("net.fabricmc:fabric-language-kotlin:1.10.18+kotlin.1.9.22")
+	shadowInclude implementation('net.bytebuddy:byte-buddy-agent:1.14.0')
 }
+
 
 processResources {
 	inputs.property "version", project.version
+	filteringCharset "UTF-8"
 
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
 	}
 }
+
+shadowJar {
+	archiveClassifier = "all-dev"
+	configurations = [project.configurations.shadowInclude]
+	minimize()
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}" }
+	}
+	exclude "/kotlin*"
+	relocate "net.bytebuddy", "icu.takeneko.deps.bytebuddy"
+}
+
+task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
+	input = shadowJar.archiveFile
+	archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
+	addNestedDependencies = true
+}
+
+
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 17

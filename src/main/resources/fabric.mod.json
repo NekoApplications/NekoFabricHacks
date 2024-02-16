@@ -1,41 +1,34 @@
 {
 	"schemaVersion": 1,
-	"id": "modid",
+	"id": "neko-fabric-hacks",
 	"version": "${version}",
-	"name": "Example mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Neko Fabric Hacks",
+	"description": "A series of fabric hacks made by nekos OwO",
 	"authors": [
-		"Me!"
+		"ZhuRuoLing"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"icon": "assets/neko_fabric_hacks/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
-		],
-		"client": [
-			"com.example.ExampleModClient"
+			{
+				"adapter": "kotlin",
+				"value": "icu.takeneko.nfh.ModKt::init"
+			}
 		]
 	},
 	"mixins": [
-		"modid.mixins.json",
-		{
-			"config": "modid.client.mixins.json",
-			"environment": "client"
-		}
+		"neko_fabric_hacks.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.15.0",
-		"minecraft": "~1.20.4",
+		"minecraft": ">1.20",
 		"java": ">=17",
-		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
+		"fabric-language-kotlin": ">=1.10.18+kotlin.1.9.22"
 	}
 }
