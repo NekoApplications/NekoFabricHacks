@@ -11,8 +11,8 @@
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
-	"license": "CC0-1.0",
-	"icon": "assets/neko_fabric_hacks/icon.png",
+	"license": "MIT",
+	"icon": "assets/neko_fabric_hacks/icon_2.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -25,6 +25,9 @@
 	"mixins": [
 		"neko_fabric_hacks.mixins.json"
 	],
+	"languageAdapters": {
+		"neko_fabric_hacks:earlyLaunch": "icu.takeneko.nfh.EarlyLaunchLanguageAdapter"
+	},
 	"depends": {
 		"fabricloader": ">=0.15.0",
 		"minecraft": ">1.20",

@@ -4,7 +4,6 @@
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
 	],
-	"plugin": "icu.takeneko.nfh.mixin.MixinConfigPlugin",
 	"injectors": {
 		"defaultRequire": 1
 	}
