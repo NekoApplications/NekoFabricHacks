@@ -5,13 +5,17 @@ import net.bytebuddy.agent.ByteBuddyAgent
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
+import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
+import java.nio.file.Files
 import java.security.ProtectionDomain
+import kotlin.io.path.Path
 
 object ClassPatcher {
 
     private lateinit var instrumentation: Instrumentation
+    private val patcherOutputPath = Path(".dumps")
 
     init {
         try {
@@ -59,9 +63,19 @@ object ClassPatcher {
                 transformed = transformed or it.apply(loader, classBeingRedefined, targetClass, classFileBuffer, node)
             }
             return if (transformed) {
-                val writer = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
-                node.accept(writer)
-                writer.toByteArray()
+                try{
+                    val writer = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
+                    node.accept(writer)
+                    writer.toByteArray().also {
+                        val path = patcherOutputPath.resolve("$className.class")
+                        Files.createDirectories(path.parent)
+                        Files.write(path, it)
+                        println(path)
+                    }
+                }catch (e:Exception){
+                    e.printStackTrace()
+                    classFileBuffer
+                }
             } else {
                 classFileBuffer
             }

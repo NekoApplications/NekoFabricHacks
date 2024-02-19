@@ -3,24 +3,33 @@ package icu.takeneko.nfh;
 import icu.takeneko.nfh.patch.ClassPatcher;
 import icu.takeneko.nfh.patch.FabricLoaderImplPatch;
 import icu.takeneko.nfh.patch.MixinConfigPatch;
+import icu.takeneko.nfh.patch.ModDiscovererPatch;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
+import net.fabricmc.loader.impl.discovery.ModDiscoverer;
 import net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Early {
     public static void launch() throws Throwable {
+        var dumps = Path.of("./.dumps");
+        if (dumps.toFile().exists()) {
+            final Iterator<Path> iterator = Files.walk(dumps).sorted(Comparator.reverseOrder()).iterator();
+            while (iterator.hasNext()) {
+                Files.delete(iterator.next());
+            }
+        }
         final ClassLoader classLoader = Early.class.getClassLoader();
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         unlockLibraryOnKnot(contextClassLoader);
@@ -56,6 +65,7 @@ public class Early {
         defineClass(classLoader, "icu.takeneko.nfh.patch.ClassPatcher");
         ClassPatcher.INSTANCE.applyPatch(FabricLoaderImpl.class, new FabricLoaderImplPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"), new MixinConfigPatch());
+        ClassPatcher.INSTANCE.applyPatch(ModDiscoverer.class, new ModDiscovererPatch());
     }
 
     public static Class<?> defineClass(String name) throws IllegalAccessException, InvocationTargetException, IOException, NoSuchMethodException {

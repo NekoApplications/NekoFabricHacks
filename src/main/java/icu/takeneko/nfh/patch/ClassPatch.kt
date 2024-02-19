@@ -4,7 +4,7 @@ import org.objectweb.asm.tree.ClassNode
 
 abstract class ClassPatch<T> {
 
-    abstract val clazz:Class<T>
+    abstract val clazz: Class<T>
 
     abstract fun apply(
         loader: ClassLoader,
@@ -12,9 +12,9 @@ abstract class ClassPatch<T> {
         targetClass: Class<T>,
         classFileBuffer: ByteArray,
         classNode: ClassNode
-    ):Boolean
+    ): Boolean
 
     override fun toString(): String {
-        return "ClassPatch of Class $clazz"
+        return "ClassPatch->$clazz"
     }
 }
