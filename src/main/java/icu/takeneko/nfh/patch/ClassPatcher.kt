@@ -70,7 +70,7 @@ object ClassPatcher {
                         val path = patcherOutputPath.resolve("$className.class")
                         Files.createDirectories(path.parent)
                         Files.write(path, it)
-                        println(path)
+                        //println(path)
                     }
                 }catch (e:Exception){
                     e.printStackTrace()

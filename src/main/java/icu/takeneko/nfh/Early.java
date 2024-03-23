@@ -3,11 +3,9 @@ package icu.takeneko.nfh;
 import icu.takeneko.nfh.patch.ClassPatcher;
 import icu.takeneko.nfh.patch.FabricLoaderImplPatch;
 import icu.takeneko.nfh.patch.MixinConfigPatch;
-import icu.takeneko.nfh.patch.ModDiscovererPatch;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
-import net.fabricmc.loader.impl.discovery.ModDiscoverer;
 import net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider;
 
 import java.io.File;
@@ -33,6 +31,7 @@ public class Early {
         final ClassLoader classLoader = Early.class.getClassLoader();
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         unlockLibraryOnKnot(contextClassLoader);
+//        run(ClassLoader.getSystemClassLoader());
         if (contextClassLoader.getClass().isInstance(classLoader)) {
             final Instrumentation inst = ByteBuddyAgent.install();
             inst.redefineModule(
@@ -46,26 +45,16 @@ public class Early {
             run(classLoader);
         } else {
             System.out.println("Relaunching on context classloader");
-//            final Instrumentation inst = ByteBuddyAgent.install();
-//            inst.redefineModule(
-//                    ModuleLayer.boot().findModule("java.base").get(),
-//                    Set.of(),
-//                    Map.of(),
-//                    Map.of("java.lang", Set.of(Early.class.getModule())),
-//                    Set.of(),
-//                    Map.of()
-//            );
             run(contextClassLoader);
         }
     }
 
     private static void run(ClassLoader classLoader) throws Throwable {
-        defineClass(classLoader, "icu.takeneko.nfh.ModKt");
-        defineClass(classLoader, "icu.takeneko.nfh.progress.Progress");
-        defineClass(classLoader, "icu.takeneko.nfh.patch.ClassPatcher");
+        defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.ModKt");
+        defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.progress.Progress");
+        defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.patch.ClassPatcher");
         ClassPatcher.INSTANCE.applyPatch(FabricLoaderImpl.class, new FabricLoaderImplPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"), new MixinConfigPatch());
-        ClassPatcher.INSTANCE.applyPatch(ModDiscoverer.class, new ModDiscovererPatch());
     }
 
     public static Class<?> defineClass(String name) throws IllegalAccessException, InvocationTargetException, IOException, NoSuchMethodException {
