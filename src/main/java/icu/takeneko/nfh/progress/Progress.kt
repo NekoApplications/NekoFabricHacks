@@ -1,6 +1,7 @@
 package icu.takeneko.nfh.progress
 
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer
+import org.spongepowered.asm.mixin.transformer.MixinTargetContext
 import org.spongepowered.asm.service.MixinService
 import java.lang.reflect.Proxy
 
@@ -25,6 +26,11 @@ object Progress {
     @JvmStatic
     fun onSelectingMixinConfig(name: String){
         logger.info("Selecting Mixin Config $name")
+    }
+
+    @JvmStatic
+    fun onMixinApply(target: MixinTargetContext, pass:String){
+        logger.info("Applying Mixin [${target.mixin.className}(from ${target.mixin.config.name}) -> ${target.targetClassInfo.name}] at stage $pass")
     }
 
     private fun describeKey(key: String): String {

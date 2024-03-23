@@ -2,13 +2,13 @@ package icu.takeneko.nfh;
 
 import icu.takeneko.nfh.patch.ClassPatcher;
 import icu.takeneko.nfh.patch.FabricLoaderImplPatch;
+import icu.takeneko.nfh.patch.MixinApplicatorStandardPatch;
 import icu.takeneko.nfh.patch.MixinConfigPatch;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
@@ -55,6 +55,7 @@ public class Early {
         defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.patch.ClassPatcher");
         ClassPatcher.INSTANCE.applyPatch(FabricLoaderImpl.class, new FabricLoaderImplPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"), new MixinConfigPatch());
+        ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard"), new MixinApplicatorStandardPatch());
     }
 
     public static Class<?> defineClass(String name) throws IllegalAccessException, InvocationTargetException, IOException, NoSuchMethodException {
