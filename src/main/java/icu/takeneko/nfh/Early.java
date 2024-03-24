@@ -4,10 +4,13 @@ import icu.takeneko.nfh.patch.ClassPatcher;
 import icu.takeneko.nfh.patch.FabricLoaderImplPatch;
 import icu.takeneko.nfh.patch.MixinApplicatorStandardPatch;
 import icu.takeneko.nfh.patch.MixinConfigPatch;
+import icu.takeneko.nfh.progress.Progress;
+import kotlin.jvm.internal.Intrinsics;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider;
+import org.spongepowered.asm.service.MixinService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,9 +53,15 @@ public class Early {
     }
 
     private static void run(ClassLoader classLoader) throws Throwable {
-        defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.ModKt");
-        defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.progress.Progress");
-        defineClass(ClassLoader.getSystemClassLoader(), "icu.takeneko.nfh.patch.ClassPatcher");
+        System.out.println("classLoader = " + classLoader);
+        System.out.println("ClassLoader.getSystemClassLoader() = " + ClassLoader.getSystemClassLoader());
+        System.out.println("ClassLoader.getPlatformClassLoader() = " + ClassLoader.getPlatformClassLoader());
+        System.out.println("MixinService.class.getClassLoader() = " + MixinService.class.getClassLoader());
+        defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.ModKt");
+        defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.progress.Progress");
+        defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.patch.ClassPatcher");
+        System.out.println("Progress.class.getClassLoader() = " + Progress.class.getClassLoader());
+        System.out.println("Intrinsics.class.getClassLoader() = " + Intrinsics.class.getClassLoader());
         ClassPatcher.INSTANCE.applyPatch(FabricLoaderImpl.class, new FabricLoaderImplPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"), new MixinConfigPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard"), new MixinApplicatorStandardPatch());
