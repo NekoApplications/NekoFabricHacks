@@ -45,23 +45,14 @@ public class Early {
                     Set.of(),
                     Map.of()
             );
-            run(classLoader);
-        } else {
-            System.out.println("Relaunching on context classloader");
-            run(contextClassLoader);
         }
+        run();
     }
 
-    private static void run(ClassLoader classLoader) throws Throwable {
-        System.out.println("classLoader = " + classLoader);
-        System.out.println("ClassLoader.getSystemClassLoader() = " + ClassLoader.getSystemClassLoader());
-        System.out.println("ClassLoader.getPlatformClassLoader() = " + ClassLoader.getPlatformClassLoader());
-        System.out.println("MixinService.class.getClassLoader() = " + MixinService.class.getClassLoader());
+    private static void run() throws Throwable {
         defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.ModKt");
         defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.progress.Progress");
         defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.patch.ClassPatcher");
-        System.out.println("Progress.class.getClassLoader() = " + Progress.class.getClassLoader());
-        System.out.println("Intrinsics.class.getClassLoader() = " + Intrinsics.class.getClassLoader());
         ClassPatcher.INSTANCE.applyPatch(FabricLoaderImpl.class, new FabricLoaderImplPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"), new MixinConfigPatch());
         ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard"), new MixinApplicatorStandardPatch());
