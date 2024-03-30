@@ -37,7 +37,7 @@ public class Progress {
                 "Applying Mixin [{}(from {}) -> {}] at stage {}",
                 target.getMixin().getClassName(),
                 target.getMixin().getConfig().getName(),
-                target.getClassInfo().getName(),
+                target.getTargetClassInfo().getName(),
                 pass
         );
     }

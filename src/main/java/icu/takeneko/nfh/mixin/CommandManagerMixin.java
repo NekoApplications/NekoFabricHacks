@@ -1,7 +1,6 @@
 package icu.takeneko.nfh.mixin;
 
 import com.mojang.brigadier.CommandDispatcher;
-import icu.takeneko.nfh.command.CommandKt;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -18,6 +17,5 @@ public class CommandManagerMixin {
 
     @Inject(method = "<init>",at = @At("RETURN"))
     void register(CommandManager.RegistrationEnvironment environment, CommandRegistryAccess commandRegistryAccess, CallbackInfo ci){
-        this.dispatcher.register(CommandKt.getReloadCommand());
     }
 }

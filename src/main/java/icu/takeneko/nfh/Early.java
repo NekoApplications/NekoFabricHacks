@@ -4,8 +4,6 @@ import icu.takeneko.nfh.patch.ClassPatcher;
 import icu.takeneko.nfh.patch.FabricLoaderImplPatch;
 import icu.takeneko.nfh.patch.MixinApplicatorStandardPatch;
 import icu.takeneko.nfh.patch.MixinConfigPatch;
-import icu.takeneko.nfh.progress.Progress;
-import kotlin.jvm.internal.Intrinsics;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
@@ -36,6 +34,9 @@ public class Early {
         unlockLibraryOnKnot(contextClassLoader);
 //        run(ClassLoader.getSystemClassLoader());
         if (contextClassLoader.getClass().isInstance(classLoader)) {
+
+        }
+        try {
             final Instrumentation inst = ByteBuddyAgent.install();
             inst.redefineModule(
                     ModuleLayer.boot().findModule("java.base").get(),
@@ -45,7 +46,7 @@ public class Early {
                     Set.of(),
                     Map.of()
             );
-        }
+        }catch (Exception ignored){}
         run();
     }
 
