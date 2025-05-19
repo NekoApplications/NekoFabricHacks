@@ -8,19 +8,28 @@ import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.spongepowered.asm.service.MixinService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.ProtectionDomain;
 import java.util.*;
 
 public class Early {
+    private static Instrumentation instrumentation;
+
     public static void launch() throws Throwable {
         var dumps = Path.of("./.dumps");
         if (dumps.toFile().exists()) {
@@ -32,47 +41,85 @@ public class Early {
         final ClassLoader classLoader = Early.class.getClassLoader();
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         unlockLibraryOnKnot(contextClassLoader);
-//        run(ClassLoader.getSystemClassLoader());
-        if (contextClassLoader.getClass().isInstance(classLoader)) {
-
-        }
         try {
             final Instrumentation inst = ByteBuddyAgent.install();
             inst.redefineModule(
-                    ModuleLayer.boot().findModule("java.base").get(),
-                    Set.of(),
-                    Map.of(),
-                    Map.of("java.lang", Set.of(Early.class.getModule())),
-                    Set.of(),
-                    Map.of()
+                ModuleLayer.boot().findModule("java.base").get(),
+                Set.of(),
+                Map.of(),
+                Map.of("java.lang", Set.of(Early.class.getModule())),
+                Set.of(),
+                Map.of()
             );
-        }catch (Exception ignored){}
+            instrumentation = inst;
+        } catch (Exception ignored) {
+        }
         run();
     }
 
+    @SuppressWarnings("unchecked")
     private static void run() throws Throwable {
         defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.ModKt");
         defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.progress.Progress");
         defineClass(MixinService.class.getClassLoader(), "icu.takeneko.nfh.patch.ClassPatcher");
-        ClassPatcher.INSTANCE.applyPatch(FabricLoaderImpl.class, new FabricLoaderImplPatch());
-        ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"), new MixinConfigPatch());
-        ClassPatcher.INSTANCE.applyPatch((Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard"), new MixinApplicatorStandardPatch());
+        instrumentation.addTransformer(new ClassFileTransformer() {
+            @Override
+            public byte[] transform(
+                ClassLoader loader,
+                String className,
+                Class<?> classBeingRedefined,
+                ProtectionDomain protectionDomain,
+                byte[] classfileBuffer
+            ) {
+                try {
+                    if (className.equals("org/spongepowered/asm/mixin/transformer/PluginHandle")) {
+                        ClassNode node = new ClassNode();
+                        new ClassReader(classfileBuffer).accept(node, 0);
+                        node.access = node.access | Opcodes.ACC_PUBLIC;
+                        for (FieldNode field : node.fields) {
+                            field.access = field.access & ~(Opcodes.ACC_PRIVATE) | Opcodes.ACC_PUBLIC;
+                        }
+                        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+                        node.accept(writer);
+                        byte[] classFile = writer.toByteArray();
+                        Path path = ClassPatcher.INSTANCE.getPatcherOutputPath().resolve(className + ".class");
+                        Files.createDirectories(path.getParent());
+                        Files.write(path, classFile);
+                        return classFile;
+                    }
+                    return null;
+                } catch (Throwable t) {
+                    throw new RuntimeException(t);
+                }
+            }
+        }, true);
+        ClassPatcher.INSTANCE.applyPatch(
+            FabricLoaderImpl.class,
+            new FabricLoaderImplPatch()
+        );
+        ClassPatcher.INSTANCE.applyPatch(
+            (Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig"),
+            new MixinConfigPatch()
+        );
+        ClassPatcher.INSTANCE.applyPatch(
+            (Class<Object>) Class.forName("org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard"),
+            new MixinApplicatorStandardPatch()
+        );
     }
 
     public static Class<?> defineClass(String name) throws IllegalAccessException, InvocationTargetException, IOException, NoSuchMethodException {
         return defineClass(FabricLoader.class.getClassLoader(), name);
     }
 
-
     public static Class<?> defineClass(ClassLoader classLoader, String name) throws IllegalAccessException, InvocationTargetException, IOException, NoSuchMethodException {
         final Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
         defineClass.setAccessible(true);
         return (Class<?>) defineClass.invoke(
-                classLoader,
-                name,
-                getClassFile(name),
-                0,
-                getClassFile(name).length
+            classLoader,
+            name,
+            getClassFile(name),
+            0,
+            getClassFile(name).length
         );
     }
 

@@ -15,7 +15,7 @@ import kotlin.io.path.Path
 object ClassPatcher {
 
     private lateinit var instrumentation: Instrumentation
-    private val patcherOutputPath = Path(".dumps")
+    val patcherOutputPath = Path(".dumps")
 
     init {
         try {

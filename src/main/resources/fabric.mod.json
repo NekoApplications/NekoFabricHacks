@@ -29,7 +29,7 @@
 		"neko_fabric_hacks:earlyLaunch": "icu.takeneko.nfh.EarlyLaunchLanguageAdapter"
 	},
 	"depends": {
-		"fabricloader": ">=0.15.0",
+		"fabricloader": ">=0.16.0",
 		"minecraft": ">1.20",
 		"java": ">=17",
 		"fabric-language-kotlin": ">=1.10.18+kotlin.1.9.22"
